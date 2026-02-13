@@ -1,16 +1,38 @@
-# Accessible Maps
+# TVM Study - Accessible Maps
 
-## Usage
+## Setup
 
-To run this example, you need a [Mapbox token](http://visgl.github.io/react-map-gl/docs/get-started/mapbox-tokens). You can either set it as `MAPBOX_TOKEN` in `src/app.js`, or set a `MapboxAccessToken` environment variable in the command line.
+### 1. Configure environment variables
+
+Copy the example environment file and add your Mapbox access token:
 
 ```bash
-npm install
+cp .env-example .env
+```
+
+Edit `.env` and replace `<your mapbox access token>` with your actual Mapbox token.
+
+To obtain a Mapbox access token:
+1. Create a free account at [mapbox.com](https://account.mapbox.com/auth/signup/)
+2. Navigate to your [Account page](https://account.mapbox.com/)
+3. Copy your **Default public token** (starts with `pk.`)
+4. Paste it as the `ACCESS_TOKEN` value in your `.env` file
+
+### 2. Install dependencies
+
+```bash
+npm install --legacy-peer-deps
+```
+
+### 3. Run the development server
+
+```bash
 npm start
 ```
-port: localhost:8080
+
+The app will open at [localhost:8080](http://localhost:8080).
 
 ## WCAG Report
+
 We submitted our project to WCAG and received the following detailed report:
 https://wcag-audiom.netlify.app/
-
