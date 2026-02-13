@@ -1,8 +1,8 @@
 {
-  "name": "visualmapper",
+  "name": "tvm-study",
   "version": "1.0.1",
-  "description": "A collection of visually accessible maps",
-  "homepage": "http:/purvasingh96.github.io/accessible-maps",
+  "description": "A collection of maps and tables for the table vs. map study",
+  "homepage": "https://xrnavigation.github.io/tvm-study/",
   "scripts": {
     "start": "webpack-dev-server --progress --hot --open",
     "start-local": "webpack-dev-server --env local --progress --hot --open",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/purvasingh96/accessible-maps.git"
+    "url": "https://github.com/xrnavigation/tvm-study.git"
   },
   "dependencies": {
     "@emotion/react": "11.4.1",

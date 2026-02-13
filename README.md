@@ -1,4 +1,8 @@
-# TVM Study - Accessible Maps
+# TVM Study
+
+## Live Site
+
+[View the live site here.](https://xrnavigation.github.io/tvm-study/)
 
 ## Setup
 
@@ -31,8 +35,3 @@ npm start
 ```
 
 The app will open at [localhost:8080](http://localhost:8080).
-
-## WCAG Report
-
-We submitted our project to WCAG and received the following detailed report:
-https://wcag-audiom.netlify.app/
