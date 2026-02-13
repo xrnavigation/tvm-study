@@ -1,11 +1,15 @@
 // NOTE: To use this example standalone (e.g. outside of repo)
 // delete the local development overrides at the bottom of this file
 
+// Load .env file into process.env
+require('dotenv').config();
+
 // avoid destructuring for older Node version support
 const path = require('path');
 const resolve = require('path').resolve;
 const webpack = require('webpack');
 HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const config = {
   mode: 'development',
@@ -63,12 +67,16 @@ const config = {
     ]
   },
 
-  // Optional: Enables reading mapbox token from environment variable
   plugins: [
-    new webpack.EnvironmentPlugin({MapboxAccessToken: ''}),
+    new webpack.EnvironmentPlugin({ACCESS_TOKEN: '', BASE_PATH: '/tvm-study'}),
     new HtmlWebpackPlugin({
       template: './index.html',
       inject: false,
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'data', to: 'data' }
+      ]
     })
   ]
 };
