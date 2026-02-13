@@ -67,7 +67,8 @@ const config = {
   plugins: [
     new webpack.EnvironmentPlugin({MapboxAccessToken: ''}),
     new HtmlWebpackPlugin({
-      title: 'react-map-gl Example',
+      template: './index.html',
+      inject: false,
     })
   ]
 };
