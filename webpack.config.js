@@ -15,7 +15,26 @@ const config = {
   mode: 'development',
 
   devServer: {
-    static: '.'
+    static: {
+      directory: resolve('.'),
+      watch: {
+        ignored: [
+          '**/node_modules/**',
+          '**/.playwright-mcp/**',
+          '**/build/**',
+          '**/.git/**',
+        ],
+      },
+    },
+  },
+
+  watchOptions: {
+    ignored: [
+      '**/node_modules/**',
+      '**/.playwright-mcp/**',
+      '**/build/**',
+      '**/.git/**',
+    ],
   },
 
   entry: {

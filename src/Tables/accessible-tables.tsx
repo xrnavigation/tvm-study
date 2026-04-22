@@ -13,6 +13,7 @@ import { TableSortLabel } from '@mui/material';
 
 type AccessibleTablesProps={
     dataUrl: string;
+    pageTitle?: string;
 }
 
 
@@ -23,6 +24,12 @@ function AccessibleTables(props: AccessibleTablesProps) {
     const [currCol, setCurrCol] = useState('cases');
     const [headers, setHeaders] = useState(defaultHeaders);
     const [orderDirection, setOrderDirection] = useState('asc' as order);
+
+    useEffect(() => {
+      if (props.pageTitle) {
+        document.title = `${props.pageTitle} - Table vs. Map Study Condition Site`;
+      }
+    }, [props.pageTitle]);
 
     useEffect(() => {
       async function getData() {

@@ -26,6 +26,7 @@ import Pins from '../Utils/Pin/pins';
 type HeatMapProps = {
   geojsonUrl: string,
   dataUrl: string,
+  pageTitle?: string,
 }
 
 
@@ -123,6 +124,12 @@ const toLabel = (text) => {
 
 
   useEffect(() => {
+    if (props.pageTitle) {
+      document.title = `${props.pageTitle} - Table vs. Map Study Condition Site`;
+    }
+  }, [props.pageTitle]);
+
+  useEffect(() => {
     /* global fetch */
     fetch(
       props.geojsonUrl
@@ -131,7 +138,6 @@ const toLabel = (text) => {
       .then(json => {
         setAllData({json:json, dimensionMap:splitDimensions(json)}); 
         setTitle(json.name);
-        document.title = json.name;
         mapRef?.flyTo({center: [json.initialViewState[0], json.initialViewState[1]], duration: 2000});
 
         if(allData){
