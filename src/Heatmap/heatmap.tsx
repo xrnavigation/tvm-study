@@ -1,8 +1,7 @@
 import * as React from 'react';
-import {useState, useEffect, useMemo, useRef, useCallback} from 'react';
-import ReactMap, {Source, Layer, GeolocateControl, FullscreenControl, NavigationControl, Marker, MapRef, MapboxStyle, useControl, MarkerDragEvent} from 'react-map-gl';
+import {useState, useEffect, useMemo, useCallback} from 'react';
+import ReactMap, {Source, Layer, GeolocateControl, FullscreenControl, NavigationControl, FillLayer, LineLayer} from 'react-map-gl';
 import { format } from 'date-fns';
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   scaleOrdinal, scaleQuantize
@@ -13,12 +12,11 @@ import GeoMapControlPanel from './heatmap-control-panel';
 import { ACCESS_TOKEN } from '../constants/constants';
 import { Container } from 'react-bootstrap';
 import { Typography } from '@mui/material';
-import { Control, LngLat, Style } from 'mapbox-gl';
+import { LngLatBoundsLike } from 'mapbox-gl';
 import { ClassNames } from '@emotion/react';
 import LegendControl, { LayersView } from 'mapboxgl-legend';
 import '../styles/mapbox-gl-export.css';
 import Color from 'color';
-import Pin from '../Utils/Pin/pin';
 import Pins from '../Utils/Pin/pins';
 
 
@@ -77,42 +75,10 @@ const toLabel = (text) => {
 
   const [hoverInfo, setHoverInfo] = useState(null);
   const [allData, setAllData] = useState({json: undefined, dimensionMap:undefined});
-  const [heatMapLayer, setHeatMapLayer] = useState(null);
-  const [patternLayer, setPatternLayer] = useState(null);
-  const [lineLayer, setLineLayer] = useState(null);
   const [mapRef, setMapRef] = useState(null);
   const [borderWidth, setBorderWidth] = useState(1);
   const [showToolTip, setShowToolTip] = useState(true);
   const [showPopup, setShowPopup] = useState(false);
-  const [marker, setMarker] = useState({
-    latitude: 40,
-    longitude: -100
-  });
-  const history = useNavigate();
-  const location = useLocation();
-  
-  const [events, logEvents] = useState<Record<string, LngLat>>({});
-
-  const onMarkerDragStart = useCallback((event: MarkerDragEvent) => {
-    logEvents(_events => ({..._events, onDragStart: event.lngLat}));
-  }, []);
-
-  const onMarkerDrag = useCallback((event: MarkerDragEvent) => {
-    logEvents(_events => ({..._events, onDrag: event.lngLat}));
-
-    setMarker({
-      longitude: event.lngLat.lng,
-      latitude: event.lngLat.lat
-    });
-  }, []);
-
-  const onMarkerDragEnd = useCallback((event: MarkerDragEvent) => {
-    logEvents(_events => ({..._events, onDragEnd: event.lngLat}));
-    const searchParams = new URLSearchParams(location.search);
-    searchParams.set('lat', event.lngLat.lat.toString());
-    searchParams.set('lng', event.lngLat.lng.toString());
-    history({ search: searchParams.toString() });
-  }, []);
 
   
   const [dimension, setDimension] = useState({
@@ -138,7 +104,14 @@ const toLabel = (text) => {
       .then(json => {
         setAllData({json:json, dimensionMap:splitDimensions(json)}); 
         setTitle(json.name);
-        mapRef?.flyTo({center: [json.initialViewState[0], json.initialViewState[1]], duration: 2000});
+        const [minLng, minLat, maxLng, maxLat] = bbox(json);
+        mapRef?.fitBounds(
+          [
+            [minLng, minLat],
+            [maxLng, maxLat],
+          ] as LngLatBoundsLike,
+          {padding: 60, maxZoom: 4, duration: 2000}
+        );
 
         if(allData){
           
@@ -150,16 +123,6 @@ const toLabel = (text) => {
             toggler: true
           });
         
-          const patternLegend = new LegendControl({
-            // Show all properties in selected layers
-            layers: {
-                'patternLayer': ['fill-pattern'],
-            },
-            toggler: true,
-          });
-        
-        mapRef?.addControl(patternLegend, "bottom-right")
-
         mapRef?.addControl(dataLegend, "bottom-right");
           
         }
@@ -237,56 +200,39 @@ const toLabel = (text) => {
 	};
  
   const data = useMemo(() => {
-   if(allData.json){
+   return allData;
+    
+  }, [allData]);
 
-    setHeatMapLayer({
+  const heatMapLayer = useMemo<FillLayer>(() => {
+   if(allData.json && allData.dimensionMap && dimension){
+    return {
         id: 'dataLayer',
         type: 'fill',
-        source: {
-          type:"geojson",
-          data: allData.json
-        },
         paint: {
           "fill-outline-color": "black",
           'fill-color': quantizeProperty(allData.json, dimension, "color", allData.dimensionMap.get(dimension.value).color)
         },
-      });
+      };
+   }
 
-  
-      setPatternLayer({
-        id: 'patternLayer',
-        type: 'fill',
-        source: {
-          type:"geojson",
-          data: allData.json
-        },
-       
-        paint: {
-          "fill-outline-color": "black",
-          'fill-color': allData.dimensionMap.get(dimension.value).color,
-          'fill-pattern': quantizeProperty(allData.json, dimension, "pattern", 'none')
-        },
-      }) ;
+   return null;
+  }, [allData, dimension]);
 
-
-      setLineLayer({
+  const lineLayer = useMemo<LineLayer>(() => {
+   if(allData.json){
+      return {
         id: 'lineLayer',
         type: 'line',
-        source: {
-          type:"geojson",
-          data: allData.json
-        },
         paint: {
           'line-color': '#000',
           'line-width': Number(borderWidth)
         },
-      });
-
+      };
    }
 
-    return allData;
-    
-  }, [allData, dimension, borderWidth]);
+   return null;
+  }, [allData, borderWidth]);
 
   const onHover = useCallback(event => {
     
@@ -341,26 +287,17 @@ const toLabel = (text) => {
           ref={(ref) => setMapRef(ref)}
           style={{border: '3px solid black', width: '90vw', height: '80vh', position:'relative', overflowY:'hidden'}}
           initialViewState={{
-            zoom: 1.5
+            longitude: data.json.initialViewState?.[0] ?? 0,
+            latitude: data.json.initialViewState?.[1] ?? 0,
+            zoom: 3
           }}
           
-          mapStyle={"mapbox://styles/purvasingh/clb2khfje000j14mjt6dwbau8"}
+          mapStyle={"mapbox://styles/mapbox/light-v11"}
           mapboxAccessToken={MAPBOX_TOKEN}
-          interactiveLayerIds={['dataLayer', 'patternLayer']}
+          interactiveLayerIds={['dataLayer']}
           onMouseMove={onHover}
           renderWorldCopies={false}
         >
-           <Marker
-            longitude={marker.longitude}
-            latitude={marker.latitude}
-            anchor="bottom"
-            draggable
-            onDragStart={onMarkerDragStart}
-            onDrag={onMarkerDrag}
-            onDragEnd={onMarkerDragEnd}
-        >
-          <Pin size={20} />
-        </Marker>
           {dimension && <GeoMapControlPanel
 						name={"COVID-19 STATE-BY-STATE DAILY STATISTIC"}
 						dimensions={data.dimensionMap as Map<string, string>}
@@ -384,15 +321,16 @@ const toLabel = (text) => {
           <NavigationControl position="top-left" />
           <div>
             <Source type="geojson" data={data.json}>
+            {heatMapLayer && (
             <Layer 
             { ...heatMapLayer}
             />
-           <Layer 
-            { ...patternLayer}
-            />
+            )}
+            {lineLayer && (
             <Layer
             {...lineLayer}
             />
+            )}
           </Source>
           {showToolTip==true && hoverInfo && dimension && (
 					<div
@@ -420,5 +358,3 @@ const toLabel = (text) => {
       </Container>
   );
 }
-
-
